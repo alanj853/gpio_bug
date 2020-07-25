@@ -1,6 +1,6 @@
 defmodule Reader do
     use GenServer
-    alias ElixirALE.GPIO
+    alias Circuits.GPIO
 
     @read_gpio_rate 1_000
     @read_mem_rate 180_000
@@ -83,14 +83,14 @@ defmodule Reader do
     end
 
     def read_pins() do
-        {_, pin0_pid} = GPIO.start_link(@pin0, :input)
-        {_, pin1_pid} = GPIO.start_link(@pin1, :input)
+        {_, pin0_pid} = GPIO.open(@pin0, :input)
+        {_, pin1_pid} = GPIO.open(@pin1, :input)
     
         GPIO.read(pin0_pid)
         GPIO.read(pin1_pid)
 
-        GenServer.stop(pin0_pid)
-        GenServer.stop(pin1_pid)
+        GPIO.close(pin0_pid)
+        GPIO.close(pin1_pid)
     end
 
 end
