@@ -92,6 +92,7 @@ defmodule Reader do
 
         GPIO.close(pin0_pid)
         GPIO.close(pin1_pid)
+        :erlang.garbage_collect()
     end
 
     defp filename() do
