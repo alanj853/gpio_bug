@@ -92,6 +92,7 @@ defmodule Reader do
 
         GenServer.stop(pin0_pid)
         GenServer.stop(pin1_pid)
+        :erlang.garbage_collect()
     end
 
     defp filename() do
