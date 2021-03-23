@@ -4,7 +4,6 @@ defmodule Reader do
 
     @read_gpio_rate 1_000
     @read_mem_rate 180_000
-    @output_file "./erl_mem_usage.csv"
 
     @pin0 1
     @pin1 2
@@ -22,10 +21,12 @@ defmodule Reader do
     end
 
     def init(_) do
-        File.rename(@output_file, @output_file <> ".1")
-        File.touch(@output_file)
+        output_dir = "./readings"
+        File.mkdir_p!(output_dir)
+        output_file = "#{output_dir}/#{filename()}"
+        File.touch(output_file)
         {:ok, io_device} =
-        File.open(@output_file, [:write, :append], fn file ->
+        File.open(output_file, [:write, :append], fn file ->
             IO.write(
             file,
             "Total,Processes,ProcessesUsed,System,Atom,AtomUsed,Binary,Code,ETS"
@@ -36,25 +37,25 @@ defmodule Reader do
         
         :timer.send_interval(@read_mem_rate, :read_mem)
         :timer.send_interval(@read_gpio_rate, :read_gpio)
-        {:ok, %{can_read: true}}
+        {:ok, %{can_read: true, output_file: output_file}}
     end
 
-    def handle_cast(:stop_read, _state) do
+    def handle_cast(:stop_read, state = %{output_file: output_file}) do
         {:ok, io_device} =
-        File.open(@output_file, [:write, :append], fn file ->
+        File.open(output_file, [:write, :append], fn file ->
             IO.write(file, "GPIO Reading stopped\n")
         end)
         File.close(io_device)
-        {:noreply, %{can_read: false}}
+        {:noreply, %{state | can_read: false}}
     end
 
-    def handle_cast(:start_read, _state) do
+    def handle_cast(:start_read, state = %{output_file: output_file}) do
         {:ok, io_device} =
-        File.open(@output_file, [:write, :append], fn file ->
+        File.open(output_file, [:write, :append], fn file ->
             IO.write(file, "GPIO Reading started\n")
         end)
         File.close(io_device)
-        {:noreply, %{can_read: true}}
+        {:noreply, %{state | can_read: true}}
     end
 
     def handle_info(:read_gpio, state = %{can_read: true}) do
@@ -66,14 +67,14 @@ defmodule Reader do
         {:noreply, state}
     end
 
-    def handle_info(:read_mem, state) do
-        read_mem()
+    def handle_info(:read_mem, state = %{output_file: output_file}) do
+        read_mem(output_file)
         {:noreply, state}
     end
 
-    def read_mem() do
+    def read_mem(output_file) do
         {:ok, io_device} =
-        File.open(@output_file, [:write, :append], fn file ->
+        File.open(output_file, [:write, :append], fn file ->
             for {_key, val} <- :erlang.memory() do
                 IO.write(file, "#{val},")
             end
@@ -91,6 +92,18 @@ defmodule Reader do
 
         GPIO.close(pin0_pid)
         GPIO.close(pin1_pid)
+    end
+
+    defp filename() do
+        "#{iex_version()}_#{timestamp()}.csv"
+    end
+
+    defp timestamp() do
+        DateTime.utc_now() |> DateTime.truncate(:second) |> DateTime.to_iso8601(:basic)
+    end
+
+    defp iex_version() do
+        "#{System.version()}_#{System.otp_release()}"
     end
 
 end
