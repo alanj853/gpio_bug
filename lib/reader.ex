@@ -1,12 +1,12 @@
 defmodule Reader do
     use GenServer
-    alias Circuits.GPIO
+    # alias Circuits.GPIO
 
     @read_gpio_rate 1_000
     @read_mem_rate 180_000
 
-    @pin0 1
-    @pin1 2
+    # @pin0 1
+    # @pin1 2
 
     def start_link(args \\ nil) do
         GenServer.start_link(__MODULE__, args, name: __MODULE__)
@@ -84,15 +84,15 @@ defmodule Reader do
     end
 
     def read_pins() do
-        {_, pin0_pid} = GPIO.open(@pin0, :input)
-        {_, pin1_pid} = GPIO.open(@pin1, :input)
+        # {_, pin0_pid} = GPIO.open(@pin0, :input)
+        # {_, pin1_pid} = GPIO.open(@pin1, :input)
     
-        GPIO.read(pin0_pid)
-        GPIO.read(pin1_pid)
+        # GPIO.read(pin0_pid)
+        # GPIO.read(pin1_pid)
 
-        GPIO.close(pin0_pid)
-        GPIO.close(pin1_pid)
-        :erlang.garbage_collect()
+        # GPIO.close(pin0_pid)
+        # GPIO.close(pin1_pid)
+        # :erlang.garbage_collect()
     end
 
     defp filename() do
