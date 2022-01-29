@@ -1,0 +1,6 @@
+1. As is now with GPIO reading + GC commented out
+2. As is now with GPIO reading commented out but with GC
+3. As is now with single opening of GPIO reading w/ GC
+4. As is now with single opening of GPIO reading w/o GC
+5. As is now with single opening of GPIO reading w GC, with single opening of file
+6. As is now with single opening of GPIO reading w/o GC with single opening of file
