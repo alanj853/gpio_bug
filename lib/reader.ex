@@ -34,10 +34,11 @@ defmodule Reader do
             IO.write(file, "\n")
         end)
         File.close(io_device)
-        
+        {_, pin0_pid} = GPIO.open(@pin0, :input)
+        {_, pin1_pid} = GPIO.open(@pin1, :input)
         :timer.send_interval(@read_mem_rate, :read_mem)
         :timer.send_interval(@read_gpio_rate, :read_gpio)
-        {:ok, %{can_read: true, output_file: output_file}}
+        {:ok, %{can_read: true, output_file: output_file, pin0_pid: pin0_pid, pin1_pid: pin1_pid}}
     end
 
     def handle_cast(:stop_read, state = %{output_file: output_file}) do
@@ -59,7 +60,7 @@ defmodule Reader do
     end
 
     def handle_info(:read_gpio, state = %{can_read: true}) do
-        read_pins()
+        read_pins(state)
         {:noreply, state}
     end
 
@@ -83,16 +84,10 @@ defmodule Reader do
         File.close(io_device)
     end
 
-    def read_pins() do
-        {_, pin0_pid} = GPIO.open(@pin0, :input)
-        {_, pin1_pid} = GPIO.open(@pin1, :input)
-    
-        GPIO.read(pin0_pid)
-        GPIO.read(pin1_pid)
-
-        GPIO.close(pin0_pid)
-        GPIO.close(pin1_pid)
-        :erlang.garbage_collect()
+    def read_pins(state) do
+	GPIO.read(state.pin0_pid)
+	GPIO.read(state.pin1_pid)
+	:erlang.garbage_collect()
     end
 
     defp filename() do
